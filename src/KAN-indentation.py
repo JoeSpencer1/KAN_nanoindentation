@@ -2,27 +2,28 @@ from kan import KAN, create_dataset
 import pandas as pd
 import numpy as np
 import torch
-torch.device='mps'
+#torch.device='mps'
 
-
-
-def create_dataset(ts_name, tr_name, yname, n_train):
-    x_names = ['C (GPa)', 'dP/dh (N/m)', 'Wp/Wt']
+def create_dataset(ts_name, tr_names, yname, n_train):
+    xnames = ['C (GPa)', 'dP/dh (N/m)', 'Wp/Wt']
     name = '../data/' + ts_name + '.csv'
-    data = pd.read_csv(name)
-    x = data.loc[:, x_names].values
-    y = data.loc[:, yname].values
+    datatr = pd.read_csv(name)
+    x = datatr.loc[:, xnames].values
+    y = datatr.loc[:, yname].values
     np.random.seed()
     tr_ind = np.random.choice(x.shape[0], size=n_train, replace=False)
-    print('indices', tr_ind)
-    name = tr_name
-    data = pd.read_csv(name)
-    x = data.loc[:, x_names].values
-    y = data.loc[:, yname].values
     x_train = x[tr_ind]
     y_train = y[tr_ind]
-    x_test = np.delete(x, tr_ind, axis=0)
-    y_test = np.delete(y, tr_ind, axis=0)
+    if tr_names == ts_name:
+        x_test = np.delete(x, tr_ind, axis=0)
+        y_test = np.delete(y, tr_ind, axis=0)
+    else:
+        name = '../data/' + tr_names + '.csv'
+        datats = pd.read_csv(name)
+        x = datats.loc[:, xnames].values
+        y = datats.loc[:, yname].values
+        x_test = x
+        y_test = y
     dataset = {}
     dataset['train_input'] = torch.from_numpy(x_train).float()
     dataset['test_input'] = torch.from_numpy(x_test).float()
@@ -30,27 +31,23 @@ def create_dataset(ts_name, tr_name, yname, n_train):
     dataset['test_label'] = torch.from_numpy(y_test).float()
     return dataset
 
+def find_loss(model, dataset, ts_name, tr_names, yname, n_train, size=10, dimen=[3,20,1], grid=20, k=5):
+    loss = np.zeros(size)
+    for i in range(size):
+        while loss[i] == 0 or np.isnan(loss[i]):
+            dataset = create_dataset(ts_name, tr_names, yname, n_train)
+            loss_dict = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+            loss[i] = loss_dict['test_loss'][0]
+            if np.isnan(loss[i]):
+                model = KAN(width=dimen, grid=grid, k=k)
+    return loss
+
 model = KAN(width=[3,20,1], grid=20, k=5)
 dataset = create_dataset('TI33_25', 'TI33_25', 'Er (GPa)', 20)
-train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-dataset = create_dataset('TI33_25', 'TI33_250', 'Er (GPa)', 20)
-train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
-train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-
-model = KAN(width=[3,20,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
-train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-
+loss = find_loss(model, dataset, 'TI33_25', 'TI33_25', 'Er (GPa)', 20)
+print('loss ', np.mean(loss), ' ', np.std(loss))
 model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'TI33_25', 'Er (GPa)', 20)
-model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-
-model2 = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'TI33_25', 'sy (GPa)', 20)
-model2.train(dataset, opt="LBFGS", steps=3, update_grid = True)
-
-model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'TI33_25', 'sy (GPa)', 20)
-model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
+dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
+loss = find_loss(model, dataset, 'TI33_25', 'TI33_500', 'Er (GPa)', 20)
+print('loss ', np.mean(loss), ' ', np.std(loss))
 
