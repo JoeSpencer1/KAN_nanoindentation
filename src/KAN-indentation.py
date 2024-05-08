@@ -31,7 +31,7 @@ def create_dataset(ts_name, tr_names, yname, n_train):
     dataset['test_label'] = torch.from_numpy(y_test).float()
     return dataset
 
-def find_loss(model, dataset, ts_name, tr_names, yname, n_train, size=10, dimen=[3,20,1], grid=20, k=5):
+def KAN_single(model, dataset, ts_name, tr_names, yname, n_train, size=10, dimen=[3,20,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
@@ -44,10 +44,10 @@ def find_loss(model, dataset, ts_name, tr_names, yname, n_train, size=10, dimen=
 
 model = KAN(width=[3,20,1], grid=20, k=5)
 dataset = create_dataset('TI33_25', 'TI33_25', 'Er (GPa)', 20)
-loss = find_loss(model, dataset, 'TI33_25', 'TI33_25', 'Er (GPa)', 20)
+loss = KAN_single(model, dataset, 'TI33_25', 'TI33_25', 'Er (GPa)', 20)
 print('loss ', np.mean(loss), ' ', np.std(loss))
 model = KAN(width=[3,20,1], grid=20, k=5)
 dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
-loss = find_loss(model, dataset, 'TI33_25', 'TI33_500', 'Er (GPa)', 20)
+loss = KAN_single(model, dataset, 'TI33_25', 'TI33_500', 'Er (GPa)', 20)
 print('loss ', np.mean(loss), ' ', np.std(loss))
 
