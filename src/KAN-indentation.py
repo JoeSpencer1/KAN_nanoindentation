@@ -6,7 +6,7 @@ torch.device='mps'
 
 
 
-def create_dataset(ts_name, tr_name,yname, n_train):
+def create_dataset(ts_name, tr_name, yname, n_train):
     x_names = ['C (GPa)', 'dP/dh (N/m)', 'Wp/Wt']
     name = '../data/' + ts_name + '.csv'
     data = pd.read_csv(name)
@@ -31,26 +31,26 @@ def create_dataset(ts_name, tr_name,yname, n_train):
     return dataset
 
 model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'Er (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_25', 'Er (GPa)', 20)
 train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-dataset = create_dataset('TI33_250', 'Er (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_250', 'Er (GPa)', 20)
 train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
-dataset = create_dataset('TI33_500', 'Er (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
 train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
 
 model = KAN(width=[3,20,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_500', 'Er (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
 train_loss = model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
 
 model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'Er (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_25', 'Er (GPa)', 20)
 model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
 
 model2 = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'sy (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_25', 'sy (GPa)', 20)
 model2.train(dataset, opt="LBFGS", steps=3, update_grid = True)
 
 model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'sy (GPa)', 20)
+dataset = create_dataset('TI33_25', 'TI33_25', 'sy (GPa)', 20)
 model.train(dataset, opt="LBFGS", steps=3, update_grid = False)
 
