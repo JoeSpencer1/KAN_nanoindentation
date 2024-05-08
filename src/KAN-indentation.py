@@ -8,7 +8,10 @@ def create_dataset(ts_name, tr_names, yname, n_train):
     name = '../data/' + ts_name + '.csv'
     datatr = pd.read_csv(name)
     x = datatr.loc[:, xnames].values
-    y = datatr.loc[:, yname].values
+    if yname == 'Er (GPa)' and ts_name[1] == 'D':
+        y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
+    else:
+        y = datatr.loc[:, yname].values
     np.random.seed()
     tr_ind = np.random.choice(x.shape[0], size=n_train, replace=False)
     x_train = x[tr_ind]
@@ -30,7 +33,7 @@ def create_dataset(ts_name, tr_names, yname, n_train):
     dataset['test_label'] = torch.from_numpy(y_test).float()
     return dataset
 
-def KAN_single(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=20, k=5):
+def KAN_one(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
@@ -41,7 +44,7 @@ def KAN_single(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=
     print('loss ', np.mean(loss), ' ', np.std(loss))
     return loss
 
-def KAN_muilti(ts_name, tr_hi, tr_lo, yname, n_train, size=10, width=[3,20,1], grid=20, k=5):
+def KAN_two(ts_name, tr_hi, tr_lo, yname, n_train, size=10, width=[3,20,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
@@ -57,11 +60,20 @@ def KAN_muilti(ts_name, tr_hi, tr_lo, yname, n_train, size=10, width=[3,20,1], g
     print('loss ', np.mean(loss), ' ', np.std(loss))
     return loss
 
+def EtoEr(E, nu):
+    nu_i, E_i = 0.0691, 1143
+    return 1 / ((1 - nu ** 2) / E + (1 - nu_i ** 2) / E_i)
 
 
 
 
 
-loss = KAN_single('TI33_25', 'TI33_25', 'sy (GPa)', 20)
-loss = KAN_single('TI33_25', 'TI33_25', 'sy (GPa)', 20)
-loss = KAN_muilti('TI33_25', 'TI33_25', '2D_70_quad', 'sy (GPa)', 20)
+
+loss = KAN_one('TI33_25', 'TI33_25', 'Er (GPa)', 20, width=[3,20,1])
+loss = KAN_two('TI33_25', 'TI33_25', '2D_70_quad', 'Er (GPa)', 20, width=[3,20,1])
+loss = KAN_two('TI33_25', 'TI33_25', '3D_quad', 'Er (GPa)', 20, width=[3,20,1])
+
+loss = KAN_one('TI33_25', 'TI33_25', 'Er (GPa)', 2, width=[3,20,1])
+loss = KAN_two('TI33_25', 'TI33_25', '2D_70_quad', 'Er (GPa)', 2, width=[3,20,1])
+loss = KAN_two('TI33_25', 'TI33_25', '3D_quad', 'Er (GPa)', 2, width=[3,20,1])
+
