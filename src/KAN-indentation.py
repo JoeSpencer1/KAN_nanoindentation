@@ -2,7 +2,6 @@ from kan import KAN, create_dataset
 import pandas as pd
 import numpy as np
 import torch
-#torch.device='mps'
 
 def create_dataset(ts_name, tr_names, yname, n_train):
     xnames = ['C (GPa)', 'dP/dh (N/m)', 'Wp/Wt']
@@ -31,23 +30,22 @@ def create_dataset(ts_name, tr_names, yname, n_train):
     dataset['test_label'] = torch.from_numpy(y_test).float()
     return dataset
 
-def KAN_single(model, dataset, ts_name, tr_names, yname, n_train, size=10, dimen=[3,20,1], grid=20, k=5):
+def KAN_single(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
+            model = KAN(width=width, grid=grid, k=k)
             dataset = create_dataset(ts_name, tr_names, yname, n_train)
             loss_dict = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
             loss[i] = loss_dict['test_loss'][0]
-            if np.isnan(loss[i]):
-                model = KAN(width=dimen, grid=grid, k=k)
+    print('loss ', np.mean(loss), ' ', np.std(loss))
     return loss
 
-model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'TI33_25', 'Er (GPa)', 20)
-loss = KAN_single(model, dataset, 'TI33_25', 'TI33_25', 'Er (GPa)', 20)
-print('loss ', np.mean(loss), ' ', np.std(loss))
-model = KAN(width=[3,20,1], grid=20, k=5)
-dataset = create_dataset('TI33_25', 'TI33_500', 'Er (GPa)', 20)
-loss = KAN_single(model, dataset, 'TI33_25', 'TI33_500', 'Er (GPa)', 20)
-print('loss ', np.mean(loss), ' ', np.std(loss))
 
+
+
+
+
+
+loss = KAN_single('TI33_25', 'TI33_500', 'Er (GPa)', 20)
+loss = KAN_single('TI33_500', 'TI33_500', 'Er (GPa)', 20)
