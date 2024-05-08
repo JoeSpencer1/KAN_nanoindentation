@@ -36,8 +36,24 @@ def KAN_single(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=
         while loss[i] == 0 or np.isnan(loss[i]):
             model = KAN(width=width, grid=grid, k=k)
             dataset = create_dataset(ts_name, tr_names, yname, n_train)
-            loss_dict = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
-            loss[i] = loss_dict['test_loss'][0]
+            lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+            loss[i] = lost_list['test_loss'][0]
+    print('loss ', np.mean(loss), ' ', np.std(loss))
+    return loss
+
+def KAN_muilti(ts_name, tr_hi, tr_lo, yname, n_train, size=10, width=[3,20,1], grid=20, k=5):
+    loss = np.zeros(size)
+    for i in range(size):
+        while loss[i] == 0 or np.isnan(loss[i]):
+            lower = 0
+            while lower == 0 or np.isnan(lower):
+                model = KAN(width=width, grid=grid, k=k)
+                dataset = create_dataset(tr_lo, tr_lo, yname, n_train)
+                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+                lower = lost_list['test_loss'][0]
+            dataset = create_dataset(ts_name, tr_hi, yname, n_train)
+            lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = True)
+            loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
     return loss
 
@@ -46,6 +62,6 @@ def KAN_single(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=
 
 
 
-
-loss = KAN_single('TI33_25', 'TI33_500', 'Er (GPa)', 20)
-loss = KAN_single('TI33_500', 'TI33_500', 'Er (GPa)', 20)
+loss = KAN_single('TI33_25', 'TI33_25', 'sy (GPa)', 20)
+loss = KAN_single('TI33_25', 'TI33_25', 'sy (GPa)', 20)
+loss = KAN_muilti('TI33_25', 'TI33_25', '2D_70_quad', 'sy (GPa)', 20)
