@@ -88,10 +88,10 @@ def EtoEr(E, nu):
 
 
 
-loss = KAN_one('TI33_25', 'TI33_25', 'Er (GPa)', 20)
-loss = KAN_two('TI33_25', 'TI33_25', '3D_quad', 'Er (GPa)', 20)
-loss = KAN_three('TI33_25', 'TI33_25', '3D_quad', '2D_70_quad', 'Er (GPa)', 20)
+loss = KAN_one('TI33_25', 'TI33_250', 'Er (GPa)', 20)
+loss = KAN_two('TI33_25', 'TI33_250', '3D_quad', 'Er (GPa)', 20)
+loss = KAN_three('TI33_25', 'TI33_250', '3D_quad', '2D_70_quad', 'Er (GPa)', 20)
 
-loss = KAN_one('TI33_25', 'TI33_25', 'sy (GPa)', 20)
-loss = KAN_two('TI33_25', 'TI33_25', '3D_quad', 'sy (GPa)', 20)
-loss = KAN_three('TI33_25', 'TI33_25', '3D_quad', '2D_70_quad', 'sy (GPa)', 20)
+loss = KAN_one('TI33_25', 'TI33_250', 'sy (GPa)', 20)
+loss = KAN_two('TI33_25', 'TI33_250', '3D_quad', 'sy (GPa)', 20)
+loss = KAN_three('TI33_25', 'TI33_250', '3D_quad', '2D_70_quad', 'sy (GPa)', 20)
