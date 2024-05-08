@@ -8,7 +8,7 @@ torch.device='mps'
 
 def create_dataset(ts_name, tr_name,yname, n_train):
     x_names = ['C (GPa)', 'dP/dh (N/m)', 'Wp/Wt']
-    name = ts_name + '.csv'
+    name = '../data/' + ts_name + '.csv'
     data = pd.read_csv(name)
     x = data.loc[:, x_names].values
     y = data.loc[:, yname].values
