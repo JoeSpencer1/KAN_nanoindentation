@@ -39,7 +39,7 @@ def KAN_one(ts_name, tr_names, yname, n_train, size=10, width=[3,20,1], grid=20,
         while loss[i] == 0 or np.isnan(loss[i]):
             model = KAN(width=width, grid=grid, k=k)
             dataset = create_dataset(ts_name, tr_names, yname, n_train)
-            lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+            lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = True)
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
     return loss
@@ -52,7 +52,7 @@ def KAN_two(ts_name, tr_hi, tr_lo, yname, n_train, size=10, width=[3,20,1], grid
             while lower == 0 or np.isnan(lower):
                 model = KAN(width=width, grid=grid, k=k)
                 dataset = create_dataset(tr_lo, tr_lo, yname, n_train)
-                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = True)
                 lower = lost_list['test_loss'][0]
             dataset = create_dataset(ts_name, tr_hi, yname, n_train)
             lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = True)
@@ -68,9 +68,9 @@ def KAN_three(ts_name, tr_highest, tr_hi, tr_lo, yname, n_train, size=10, width=
             while lower == 0 or np.isnan(lower):
                 model = KAN(width=width, grid=grid, k=k)
                 dataset = create_dataset(tr_lo, tr_lo, yname, n_train)
-                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = True)
                 dataset = create_dataset(tr_hi, tr_hi, yname, n_train)
-                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
+                lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = True)
                 lower = lost_list['test_loss'][0]
                 lower = lost_list['test_loss'][0]
             dataset = create_dataset(ts_name, tr_highest, yname, n_train)

@@ -80,7 +80,6 @@ def forward_model(E, n, sigma_y, nu, Pm=None, hm=None, nu_i=0.07, E_i=1100e9):
     WpWt = Pi5(hr / hm)
     return Estar, C, hr, dPdh, WpWt, p_ave
 
-
 def inverse_model(C, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9):
     cstar = 1.1957  # Conical
     # cstar = 1.2370  # Berkovich
@@ -108,7 +107,6 @@ def inverse_model(C, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9):
     else:
         sigma_y = sigma_33
     return E, Estar, n, sigma_y, p_ave
-
 
 def inverse_model_dual(Ca, Cb, theta, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9):
     cstar = 1.1957
@@ -149,7 +147,6 @@ def inverse_model_dual(Ca, Cb, theta, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9)
         sigma_y = (sigma_33 + sigma_r) / 2
     return E, Estar, n, sigma_y, p_ave
 
-
 def test_inverse(filename):
     nu = 0.3
     hm = 0.2e-6
@@ -183,7 +180,6 @@ def test_inverse(filename):
     print("n APE:", np.mean(ape), np.std(ape))
     np.savetxt("n.dat", np.hstack((d.y, y_pred)))
 
-
 def test_inverse_dual(filename):
     nu = 0.3
     hm = 0.2e-6
@@ -210,7 +206,6 @@ def test_inverse_dual(filename):
     mape = np.mean(np.abs(y_pred - d.y) / d.y) * 100
     print("sigma_y MAPE:", mape)
 
-
 def gen_forward():
     nu = 0.3
     hm = 0.2e-6
@@ -233,7 +228,6 @@ def gen_forward():
 
             _, C, _, dPdh, WpWt, _ = forward_model(E * 1e9, n, sigma_y * 1e9, nu, hm=hm)
             writer.writerow([n, E, sigma_y, C / 1e9, dPdh, WpWt])
-
 
 def gen_inverse():
     nu = 0.3
