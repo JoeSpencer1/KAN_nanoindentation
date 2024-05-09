@@ -33,7 +33,7 @@ def create_dataset(ts_name, tr_names, yname, n_train):
     dataset['test_label'] = torch.from_numpy(y_test).float()
     return dataset
 
-def KAN_one(ts_name, tr_names, yname, n_train, size=10, width=[3,7,7,1], grid=20, k=5):
+def KAN_one(ts_name, tr_names, n_train, yname, size=10, width=[3,7,7,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
@@ -42,52 +42,65 @@ def KAN_one(ts_name, tr_names, yname, n_train, size=10, width=[3,7,7,1], grid=20
             lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
+    with open('output.txt', 'a') as f:
+        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_names) + ' ' + str(n_train))
     return
 
-def KAN_two(ts_name, tr_hi, tr_lo, yname, n_train, size=10, width=[3,7,7,1], grid=20, k=5):
+def KAN_two(ts_name, tr_hi, n_hi, tr_lo, n_lo, yname, size=10, width=[3,7,7,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
             lower = 0
             while lower == 0 or np.isnan(lower):
                 model = KAN(width=width, grid=grid, k=k, bias_trainable=True, sp_trainable=True, sb_trainable=True)
-                dataset = create_dataset(tr_lo, tr_lo, yname, n_train)
+                dataset = create_dataset(tr_lo, tr_lo, yname, n_lo)
                 lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
                 lower = lost_list['test_loss'][0]
-            dataset = create_dataset(ts_name, tr_hi, yname, n_train)
+            dataset = create_dataset(ts_name, tr_hi, yname, n_hi)
             lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
+    with open('output.txt', 'a') as f:
+        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_hi) + ' ' + str(n_hi) + ' ' + t2s(tr_lo) + ' ' + str(n_lo))
     return
 
-def KAN_three(ts_name, tr_highest, tr_hi, tr_lo, yname, n_train, size=10, width=[3,7,7,1], grid=20, k=5):
+def KAN_three(ts_name, tr_highest, n_highest, tr_hi, n_hi, tr_lo, n_lo, yname, size=10, width=[3,7,7,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
         while loss[i] == 0 or np.isnan(loss[i]):
             lower = 0
             while lower == 0 or np.isnan(lower):
                 model = KAN(width=width, grid=grid, k=k, bias_trainable=True, sp_trainable=True, sb_trainable=True)
-                dataset = create_dataset(tr_lo, tr_lo, yname, n_train)
+                dataset = create_dataset(tr_lo, tr_lo, yname, n_lo)
                 lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
-                dataset = create_dataset(tr_hi, tr_hi, yname, n_train)
+                dataset = create_dataset(tr_hi, tr_hi, yname, n_hi)
                 lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
                 lower = lost_list['test_loss'][0]
                 lower = lost_list['test_loss'][0]
-            dataset = create_dataset(ts_name, tr_highest, yname, n_train)
+            dataset = create_dataset(ts_name, tr_highest, yname, n_highest)
             lost_list = model.train(dataset, opt='LBFGS', steps=3, update_grid = False)
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
+    with open('output.txt', 'a') as f:
+        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_highest) + ' ' + str(n_highest) + ' ' + t2s(tr_hi) + ' ' + str(n_hi) + ' ' + t2s(tr_lo) + ' ' + str(n_lo))
     return
 
 def EtoEr(E, nu):
     nu_i, E_i = 0.0691, 1143
     return 1 / ((1 - nu ** 2) / E + (1 - nu_i ** 2) / E_i)
 
+def t2s(names):
+    if type(names) is str:
+        return names
+    else:
+        return '[' + ','.join(names) + ']'
 
 
 
 
 
-KAN_one('TI33_25', 'TI33_25', 'Er (GPa)', 20)
-KAN_two('TI33_25', 'TI33_25', '3D_quad', 'Er (GPa)', 20)
-KAN_three('TI33_25', 'TI33_25', '3D_quad', '2D_70_quad', 'Er (GPa)', 20)
+
+KAN_one('TI33_500', 'TI33_25', 10, 'Er (GPa)')
+KAN_two('TI33_500', 'TI33_25', 10, '3D_quad', 10, 'Er (GPa)')
+KAN_three('TI33_500', 'TI33_25', 10, '3D_quad', 10, '2D_70_quad', 10, 'Er (GPa)')
+KAN_three('TI33_500', '2D_70_quad', 10, '3D_quad', 10, 'TI33_25', 10, 'Er (GPa)')
