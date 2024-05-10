@@ -23,9 +23,14 @@ def create_dataset(ts_name, tr_names, yname, n_train):
         name = '../data/' + tr_names + '.csv'
         datats = pd.read_csv(name)
         x = datats.loc[:, xnames].values
-        y = datats.loc[:, yname].values
+        if yname == 'Er (GPa)' and ts_name[1] == 'D':
+            y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
+        else:
+            y = datatr.loc[:, yname].values
         x_test = x
         y_test = y
+        if len(y_test) > len(y_train):
+
     dataset = {}
     dataset['train_input'] = torch.from_numpy(x_train).float()
     dataset['test_input'] = torch.from_numpy(x_test).float()
@@ -43,7 +48,7 @@ def KAN_one(ts_name, tr_names, n_train, yname, size=10, width=[3,7,7,1], grid=20
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
     with open('output.txt', 'a') as f:
-        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_names) + ' ' + str(n_train))
+        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_names) + ' ' + str(n_train) + '\n')
     return
 
 def KAN_two(ts_name, tr_hi, n_hi, tr_lo, n_lo, yname, size=10, width=[3,7,7,1], grid=20, k=5):
@@ -61,7 +66,7 @@ def KAN_two(ts_name, tr_hi, n_hi, tr_lo, n_lo, yname, size=10, width=[3,7,7,1], 
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
     with open('output.txt', 'a') as f:
-        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_hi) + ' ' + str(n_hi) + ' ' + t2s(tr_lo) + ' ' + str(n_lo))
+        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_hi) + ' ' + str(n_hi) + ' ' + t2s(tr_lo) + ' ' + str(n_lo) + '\n')
     return
 
 def KAN_three(ts_name, tr_highest, n_highest, tr_hi, n_hi, tr_lo, n_lo, yname, size=10, width=[3,7,7,1], grid=20, k=5):
@@ -82,7 +87,7 @@ def KAN_three(ts_name, tr_highest, n_highest, tr_hi, n_hi, tr_lo, n_lo, yname, s
             loss[i] = lost_list['test_loss'][0]
     print('loss ', np.mean(loss), ' ', np.std(loss))
     with open('output.txt', 'a') as f:
-        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_highest) + ' ' + str(n_highest) + ' ' + t2s(tr_hi) + ' ' + str(n_hi) + ' ' + t2s(tr_lo) + ' ' + str(n_lo))
+        f.write('KAN_two ' + yname + ' ' + str(np.mean(loss)) + ' ' + str(np.std(loss)) + ' ' + t2s(ts_name) + ' ' + t2s(tr_highest) + ' ' + str(n_highest) + ' ' + t2s(tr_hi) + ' ' + str(n_hi) + ' ' + t2s(tr_lo) + ' ' + str(n_lo) + '\n')
     return
 
 def EtoEr(E, nu):
@@ -99,8 +104,7 @@ def t2s(names):
 
 
 
-
-KAN_one('TI33_500', 'TI33_25', 10, 'Er (GPa)')
-KAN_two('TI33_500', 'TI33_25', 10, '3D_quad', 10, 'Er (GPa)')
 KAN_three('TI33_500', 'TI33_25', 10, '3D_quad', 10, '2D_70_quad', 10, 'Er (GPa)')
 KAN_three('TI33_500', '2D_70_quad', 10, '3D_quad', 10, 'TI33_25', 10, 'Er (GPa)')
+KAN_one('TI33_500', 'TI33_25', 10, 'Er (GPa)')
+KAN_two('TI33_500', 'TI33_25', 10, '3D_quad', 10, 'Er (GPa)')
