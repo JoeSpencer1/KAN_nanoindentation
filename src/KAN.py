@@ -8,7 +8,7 @@ def create_dataset(ts_name, tr_names, yname, n_train):
     name = '../data/' + ts_name + '.csv'
     datatr = pd.read_csv(name)
     x = datatr.loc[:, xnames].values
-    if yname == 'Er (GPa)' and ts_name[1] == 'D':
+    if yname == 'Er (GPa)' and 'Er (GPa)' not in datatr.columns:
         y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
     else:
         y = datatr.loc[:, yname].values
@@ -23,10 +23,17 @@ def create_dataset(ts_name, tr_names, yname, n_train):
         name = '../data/' + tr_names + '.csv'
         datats = pd.read_csv(name)
         x = datats.loc[:, xnames].values
+<<<<<<< HEAD
         if yname == 'Er (GPa)' and ts_name[1] == 'D':
             y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
         else:
             y = datatr.loc[:, yname].values
+=======
+        if yname == 'Er (GPa)' and 'Er (GPa)' not in datatr.columns:
+             y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
+        else:
+            y = datatr.loc[:, yname].values     
+>>>>>>> 198187f814be912b6251b9ef1611b9665a632bd4
         x_test = x
         y_test = y
         if len(y_test) > len(y_train):

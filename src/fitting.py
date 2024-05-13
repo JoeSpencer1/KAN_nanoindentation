@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy import optimize
 
-from NN import FileData
+from NN import FileData, EtoEr
 
 def Pi1(Estar_sigma33):
     x = np.log(Estar_sigma33)
@@ -36,6 +36,8 @@ def Pi5(hrhm):
 
 def Pitheta(theta, Estar_sigma):
     x = np.log(Estar_sigma)
+    if theta in [70.3, 70.03]:
+        return -1.13 * x ** 3 + 13.635 * x ** 2 - 30.594 * x + 29.267
     if theta == 60:
         return -0.154 * x ** 3 + 0.932 * x ** 2 + 7.657 * x - 11.773
     if theta == 80:
@@ -53,13 +55,27 @@ def epsilon_r(theta):
 
 
 
-
+def read_dual(filename):
+    df = pd.read_csv('../data/' + filename + '.csv')
+    if 'n' not in df.columns:
+        df['n'] = pd.DataFrame(np.zeros((len(df['sy (GPa)']), 1)))
+    else:
+        df['n'] = df['n'].astype('float')
+    if 'hm' not in df.columns:
+        df['hm'] = pd.DataFrame(np.ones((len(df['sy (GPa)']), 1)) * 2e-6)
+    else:
+        df['hm'] = df['hm'] * 1e-9
+    if 'nu' not in df.columns:
+        df['nu'] = pd.DataFrame(np.ones((len(df['sy (GPa)']), 1)) * 0.25)
+    if 'Er (GPa)' not in df.columns:
+        df['Er (GPa)'] = EtoEr(df['E (GPa)'].values, df['nu'].values)[:, None]
+    return df
 
 def forward_model(E, n, sigma_y, nu, Pm=None, hm=None, nu_i=0.07, E_i=1100e9):
     assert (hm is None) ^ (Pm is None)
 
-    cstar = 1.1957
-    # cstar = 1.2370
+    # cstar = 1.1957 # Large deformations are enabled, conical indenter
+    cstar = 1.2370 # Large deformations are enabled, Berkovich indenter
 
     sigma_33 = sigma_y * (1 + E / sigma_y * 0.033) ** n
     Estar = 1 / ((1 - nu ** 2) / E + (1 - nu_i ** 2) / E_i)
@@ -81,8 +97,8 @@ def forward_model(E, n, sigma_y, nu, Pm=None, hm=None, nu_i=0.07, E_i=1100e9):
     return Estar, C, hr, dPdh, WpWt, p_ave
 
 def inverse_model(C, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9):
-    cstar = 1.1957  # Conical
-    # cstar = 1.2370  # Berkovich
+    # cstar = 1.1957  # Conical
+    cstar = 1.2370  # Berkovich
 
     if WpWt < Pi5(0):
         hr = 1e-9
@@ -99,6 +115,7 @@ def inverse_model(C, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9):
             lambda x: Pi2(Estar / sigma_33, x) - dPdh / Estar / hm, 0, 0.5
         )
     except ValueError:
+        print('VE1')
         n = 0
     if n > 0:
         sigma_y = optimize.brentq(
@@ -129,6 +146,7 @@ def inverse_model_dual(Ca, Cb, theta, WpWt, dPdh, nu, hm, nu_i=0.07, E_i=1100e9)
             )
             break
     else:
+        print('VE2')
         raise ValueError
     epsilon = epsilon_r(theta)
     E = (1 - nu ** 2) / (1 / Estar - (1 - nu_i ** 2) / E_i)
@@ -157,50 +175,37 @@ def test_inverse(filename):
         [inverse_model(x[0] * 1e9, x[2], x[1], nu, hm)[1] / 1e9 for x in d.X]
     )[:, None]
     ape = np.abs(y_pred - d.y) / d.y * 100
-    print("E* APE:", np.mean(ape), np.std(ape))
-    np.savetxt("E.dat", np.hstack((d.y, y_pred)))
-
+    print("Er APE:", np.mean(ape), np.std(ape))
+    
     # sigma_y
-    d = FileData(filename, 'sy')
+    d = read_dual(filename)
     y_pred = np.array(
-        [inverse_model(x[0] * 1e9, x[2], x[1], nu, hm)[3] / 1e9 for x in d.X]
+        [inverse_model(x[0] * 1e9, x[2], x[1], nu, hm)[3] / 1e9 for x in d.rows()]
     )[:, None]
     ape = np.abs(y_pred - d.y) / d.y * 100
     print("sigma_y APE:", np.mean(ape), np.std(ape))
-    np.savetxt("sy.dat", np.hstack((d.y, y_pred)))
-
-    # n
-    d = BerkovichData("n")
-    y_pred = np.array([inverse_model(x[0] * 1e9, x[2], x[1], nu, hm)[2] for x in d.X])[
-        :, None
-    ]
-    print(d.y)
-    print(y_pred)
-    ape = np.abs(y_pred - d.y) / d.y * 100
-    print("n APE:", np.mean(ape), np.std(ape))
-    np.savetxt("n.dat", np.hstack((d.y, y_pred)))
 
 def test_inverse_dual(filename):
-    nu = 0.3
+    nu = 0.25
     hm = 0.2e-6
 
     # Estar
-    d = FileData(filename, 'Er')
+    d = read_dual(filename)
     y_pred = np.array(
         [
-            inverse_model_dual(x[0] * 1e9, x[-1] * 1e9, 60, x[2], x[1], nu, hm)[1] / 1e9
-            for x in d.X
+            inverse_model_dual(d['C (GPa)'][i] * 1e9, d['n'][i] * 1e9, 70.03, d['Wp/Wt'][i], d['dP/dh (N/m)'][i], d['nu'][i], d['hm'][i])[1] / 1e9
+            for i in d['n']
         ]
     )[:, None]
     mape = np.mean(np.abs(y_pred - d.y) / d.y) * 100
     print("E* MAPE:", mape)
 
     # sigma_y
-    d = FileData(filename, 'sy')
+    d = read_dual(filename)
     y_pred = np.array(
         [
-            inverse_model_dual(x[0] * 1e9, x[-1] * 1e9, 60, x[2], x[1], nu, hm)[3] / 1e9
-            for x in d.X
+            inverse_model_dual(d['C (GPa)'][i] * 1e9, d['n'][i] * 1e9, 70.03, d['Wp/Wt'][i], d['dP/dh (N/m)'][i], d['nu'][i], d['hm'][i])[1] / 1e9
+            for i in d['n']
         ]
     )[:, None]
     mape = np.mean(np.abs(y_pred - d.y) / d.y) * 100
@@ -248,9 +253,9 @@ def gen_inverse():
 
 def main():
     # print(inverse_model(27.4e9, 0.902, 4768e3 * 0.2 * (27.4 / 3)**0.5 * 10**(-1.5), 0.3, 0.2e-6, nu_i=0.07, E_i=1100e9))
-    # test_inverse()
-    # test_inverse_dual()
-    gen_forward()
+    # test_inverse('TI33_25')
+    test_inverse_dual('TI33_25')
+    # gen_forward()
     # gen_inverse()
 
 
