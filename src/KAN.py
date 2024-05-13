@@ -3,19 +3,26 @@ import pandas as pd
 import numpy as np
 import torch
 
+'''
+You need to modify this code to read in a tuple for training/testing data. Maybe add another function for that. Also, the current code has train and test data confounded.
 def create_dataset(ts_name, tr_names, yname, n_train):
     xnames = ['C (GPa)', 'dP/dh (N/m)', 'Wp/Wt']
-    name = '../data/' + ts_name + '.csv'
-    datatr = pd.read_csv(name)
-    x = datatr.loc[:, xnames].values
-    if yname == 'Er (GPa)' and 'Er (GPa)' not in datatr.columns:
-        y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
+    if type(tr_names) is str:
+        tr_names = '../data/' + tr_names + '.csv'
     else:
-        y = datatr.loc[:, yname].values
+        
+    datatr = pd.read_csv(tr_names)
+    xtr = datatr.loc[:, xnames].values
+    datatr = pd.read_csv(tr_names)
+    xtr = datatr.loc[:, xnames].values
+    if yname == 'Er (GPa)' and 'Er (GPa)' not in datatr.columns:
+        ytr = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
+    else:
+        ytr = datatr.loc[:, yname].values
     np.random.seed()
-    tr_ind = np.random.choice(x.shape[0], size=n_train, replace=False)
-    x_train = x[tr_ind]
-    y_train = y[tr_ind]
+    tr_ind = np.random.choice(xtr.shape[0], size=n_train, replace=False)
+    x_train = xtr[tr_ind]
+    y_train = ytr[tr_ind]
     if tr_names == ts_name:
         x_test = np.delete(x, tr_ind, axis=0)
         y_test = np.delete(y, tr_ind, axis=0)
@@ -23,28 +30,32 @@ def create_dataset(ts_name, tr_names, yname, n_train):
         name = '../data/' + tr_names + '.csv'
         datats = pd.read_csv(name)
         x = datats.loc[:, xnames].values
-<<<<<<< HEAD
-        if yname == 'Er (GPa)' and ts_name[1] == 'D':
+        if yname == 'Er (GPa)' and 'Er (GPa)' not in datatr.columns:
             y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
         else:
             y = datatr.loc[:, yname].values
-=======
-        if yname == 'Er (GPa)' and 'Er (GPa)' not in datatr.columns:
-             y = EtoEr(datatr.loc[:, 'E (GPa)'].values, datatr.loc[:, 'nu'].values)
-        else:
-            y = datatr.loc[:, yname].values     
->>>>>>> 198187f814be912b6251b9ef1611b9665a632bd4
+        print(x.shape)
+        print(y.shape)
+        print(len(x), ' ', len(x_train))
+        if len(x) < len(xts):
+            if len(x)*2 > len(xts):
+                print(x_train.shape[0]-x.shape[0])
+                extra = np.random.choice(x.shape[0], size=x_train.spahe[0]-x.shape[0], replace=False)
+            else:
+                extra = np.random.choice(x.shape[0], size=x_train.spahe[0]-x.shape[0], replace=True)
+            print(x[extra].shape)
+            print(y[extra].shape)
+            x = np.vstack((x, x[extra]))
+            y = np.vstack((y, y[extra]))
         x_test = x
         y_test = y
-        if len(y_test) > len(y_train):
-
     dataset = {}
     dataset['train_input'] = torch.from_numpy(x_train).float()
     dataset['test_input'] = torch.from_numpy(x_test).float()
     dataset['train_label'] = torch.from_numpy(y_train).float()
     dataset['test_label'] = torch.from_numpy(y_test).float()
     return dataset
-
+'''
 def KAN_one(ts_name, tr_names, n_train, yname, size=10, width=[3,7,7,1], grid=20, k=5):
     loss = np.zeros(size)
     for i in range(size):
